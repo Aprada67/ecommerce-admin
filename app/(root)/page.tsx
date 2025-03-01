@@ -4,6 +4,9 @@ export default function Home() {
   return (
     <div className="p-4">
       <Button>Click Me</Button>
+      <div>
+        <Button>Don't click me</Button>
+      </div>
     </div>
-  )
+  );
 }
