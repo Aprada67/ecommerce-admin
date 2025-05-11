@@ -2,10 +2,14 @@
 
 import * as z from "zod";
 import { useState } from "react";
+import axios from "axios";
 import { Store } from "@prisma/client";
 import { Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import toast from "react-hot-toast";
+import { useParams, useRouter } from "next/navigation";
+
 
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -15,9 +19,12 @@ import {
     FormControl, 
     FormField, 
     FormItem, 
-    FormLabel 
+    FormLabel, 
+    FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { AlertModal } from "@/components/modals/alert-modal";
+import { ApiAlert } from "@/components/ui/api-alert";
 
 
 interface SettingsFormProps {
@@ -33,6 +40,9 @@ type SettingsFormValues = z.infer<typeof formSchema>;
 export const SettingsForm: React.FC<SettingsFormProps> = ({
     initialData
 }) => {
+    const params = useParams();
+    const router = useRouter();
+
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -42,20 +52,53 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
     });
 
     const onSubmit = async (data: SettingsFormValues) => {
-        console.log(data);
+        try {
+            setLoading(true);
+            await axios.patch(`/api/stores/${params.storeId}`, data);
+            router.refresh();
+            toast.success("Store updated.");
+        } catch (error) {
+            toast.error("Something went wrong.");
+        } finally {
+            setLoading(false);
+        }
     };
+
+    const onDelete = async () => {
+        try {
+           setLoading(true)
+           await axios.delete(`/api/stores/${params.storeId}`)
+           router.refresh();
+           router.push("/")
+           toast.success("Store deleted.");
+        } catch (error) {
+            toast.error("Make sure you revemod all products and categories first.");
+        } finally {
+            setLoading(false)
+            setOpen(false)
+        }
+    }
 
     return (
         <>
-            <div className="flex items-center justify-between">
+            <AlertModal
+                isOpen={open}
+                onClose={() => setOpen(false)}
+                onConfirm={onDelete}
+                loading={loading}
+            />
+
+            <div className="flex items-center justify-between font-bold">
                 <Heading
                 title="Settings"
                 description="Manage store preferences"
                 />
                 <Button
+                    className="cursor-pointer"
+                    disabled={loading}
                     variant="destructive"
                     size="icon"
-                    onClick={() => {}}
+                    onClick={() => setOpen(true)}
                 >
                     <Trash className="h-4 w-4"/>
                 </Button>
@@ -72,14 +115,24 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                                     <FormLabel>Name</FormLabel>
                                     <FormControl>
                                         <Input disabled={loading} placeholder="Store name" {...field}/>
-                                    </FormControl>    
+                                    </FormControl>
+                                    <FormMessage />      
                                 </FormItem>
                             )}
                         />
                     </div>
+                    <Button disabled={loading} className="ml-auto cursor-pointer" type="submit">
+                        Save changes
+                    </Button>
                 </form>
             </Form>
-        </>
+            <Separator />
+            <ApiAlert 
+                title="NEXT_PUBLIC_API_URL" 
+                description={`${origin}/api/${params.storeId}`}
+                variant="public"
+            />
+        </>    
     );
 };
 

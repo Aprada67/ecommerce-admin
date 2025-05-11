@@ -81,12 +81,13 @@ export const StoreModal = () => {
                             />
                             <div className="pt-6 space-x-2 flex items-center justify-end w-full">
                                 <Button
+                                    className="cursor-pointer"
                                     disabled={loading}
                                     variant="outline" 
                                     onClick={storeModal.onClose}>
                                         Cancel
                                 </Button>
-                                <Button disabled={loading} type="submit">Continue</Button>
+                                <Button disabled={loading} type="submit" className="cursor-pointer">Continue</Button>
                             </div>
                         </form>
                     </Form>
